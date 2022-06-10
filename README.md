@@ -1,4 +1,4 @@
-# ExtractAZVM
+# ExportAZVM
 
 Please create one notepad with all the subscription ID inside 
 
