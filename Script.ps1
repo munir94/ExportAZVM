@@ -13,7 +13,7 @@ Connect-AzAccount
 # Create Report Array
 $report = @()
 # Record all the subscriptions in a Text file  
-$SubscriptionIds = Get-Content -Path "C:\pwsh\inputs\Subcriptions.txt"
+$SubscriptionIds = Get-Content -Path "C:\pwsh\ExportAZVM\Subscriptions.txt"
 Foreach ($SubscriptionId in $SubscriptionIds) 
 {
 $reportName = "VM-Details.csv"
@@ -31,7 +31,7 @@ $publicIps = Get-AzPublicIpAddress
 $nics = Get-AzNetworkInterface | ?{ $_.VirtualMachine -NE $null} 
 foreach ($nic in $nics) { 
     # Creating the Report Header we have taken maxium 5 disks but you can extend it based on your need
-    $ReportDetails = "" | Select VmName, Hostname , ResourceGroupName, Region, VmSize, VmCore, VmRAM , VirtualNetwork, Subnet, PrivateIpAddress, OsType, OSversion , PublicIPAddress, NicName, ApplicationSecurityGroup, OSDiskName, OSDisksku , OSDiskCaching, OSDiskSize, DataDiskCount, DataDisk1Name, DataDisk1Size,DataDisk1Caching, DataDisk2Name, DataDisk2Size,DataDisk2Caching, DataDisk3Name, DataDisk3Size,DataDisk3Caching,  DataDisk4Name, DataDisk4Size,DataDisk4Caching, DataDisk5Name, DataDisk5Size,DataDisk5Caching
+    $ReportDetails = "" | Select VmName, Hostname , ResourceGroupName, Region, VmSize, VmCore, VmRAM , VirtualNetwork, Subnet, PrivateIpAddress, OsType, OSversion , PublicIPAddress, NicName, ApplicationSecurityGroup, OSDiskName, OSDisksku , OSDiskCaching, OSDiskSize, DataDiskCount, DataDisk1Name, DataDisk1Size,DataDisk1Caching, DataDisk1sku , DataDisk2Name, DataDisk2Size,DataDisk2Caching,DataDisk2sku , DataDisk3Name, DataDisk3Size,DataDisk3Caching,DataDisk3sku ,  DataDisk4Name, DataDisk4Size,DataDisk4Caching,DataDisk4sku , DataDisk5Name, DataDisk5Size,DataDisk5Caching , DataDisk5sku 
    #Get VM IDs
     $vm = $vms | ? -Property Id -eq $nic.VirtualMachine.id 
     foreach($publicIp in $publicIps) { 
@@ -55,7 +55,6 @@ foreach ($nic in $nics) {
         $ReportDetails.ApplicationSecurityGroup = $nic.IpConfigurations.ApplicationSecurityGroups.Id 
         $ReportDetails.OSDiskName = $vm.StorageProfile.OsDisk.Name
         $ReportDetails.OSDisksku = (Get-azdisk -ResourceGroupName $vm.ResourceGroupName -DiskName $vm.StorageProfile.OsDisk.Name).Sku.Name
-         #  $disk=Get-AZDisk -ResourceGroupName "marklab" -DiskName "rdpissue" 
         $ReportDetails.OSDiskSize = $vm.StorageProfile.OsDisk.DiskSizeGB
         $ReportDetails.OSDiskCaching = $vm.StorageProfile.OsDisk.Caching
         $ReportDetails.DataDiskCount = $vm.StorageProfile.DataDisks.count
@@ -70,39 +69,44 @@ foreach ($nic in $nics) {
        $ReportDetails.DataDisk1Name = $vm.StorageProfile.DataDisks[$disk.Lun].Name 
        $ReportDetails.DataDisk1Size =  $vm.StorageProfile.DataDisks[$disk.Lun].DiskSizeGB 
        $ReportDetails.DataDisk1Caching =  $vm.StorageProfile.DataDisks[$disk.Lun].Caching 
+       $ReportDetails.DataDisk1sku = (Get-azdisk -ResourceGroupName $vm.ResourceGroupName -DiskName $vm.StorageProfile.DataDisks[$disk.Lun].Name).Sku.Name
          
         }
         elseif($disk.Lun -eq 1)
         {
         $ReportDetails.DataDisk2Name = $vm.StorageProfile.DataDisks[$disk.Lun].Name 
        $ReportDetails.DataDisk2Size =  $vm.StorageProfile.DataDisks[$disk.Lun].DiskSizeGB 
-       $ReportDetails.DataDisk2Caching =  $vm.StorageProfile.DataDisks[$disk.Lun].Caching 
+       $ReportDetails.DataDisk2Caching =  $vm.StorageProfile.DataDisks[$disk.Lun].Caching
+       $ReportDetails.DataDisk2sku = (Get-azdisk -ResourceGroupName $vm.ResourceGroupName -DiskName $vm.StorageProfile.DataDisks[$disk.Lun].Name).Sku.Name 
         }
         elseif($disk.Lun -eq 2)
         {
         $ReportDetails.DataDisk3Name = $vm.StorageProfile.DataDisks[$disk.Lun].Name 
        $ReportDetails.DataDisk3Size =  $vm.StorageProfile.DataDisks[$disk.Lun].DiskSizeGB 
        $ReportDetails.DataDisk3Caching =  $vm.StorageProfile.DataDisks[$disk.Lun].Caching 
+       $ReportDetails.DataDisk3sku = (Get-azdisk -ResourceGroupName $vm.ResourceGroupName -DiskName $vm.StorageProfile.DataDisks[$disk.Lun].Name).Sku.Name
         }
         elseif($disk.Lun -eq 3)
         {
         $ReportDetails.DataDisk4Name = $vm.StorageProfile.DataDisks[$disk.Lun].Name 
        $ReportDetails.DataDisk4Size =  $vm.StorageProfile.DataDisks[$disk.Lun].DiskSizeGB 
-       $ReportDetails.DataDisk4Caching =$vm.StorageProfile.DataDisks[$disk.Lun].Caching 
+       $ReportDetails.DataDisk4Caching =$vm.StorageProfile.DataDisks[$disk.Lun].Caching
+       $ReportDetails.DataDisk4sku = (Get-azdisk -ResourceGroupName $vm.ResourceGroupName -DiskName $vm.StorageProfile.DataDisks[$disk.Lun].Name).Sku.Name 
         }
         elseif($disk.Lun -eq 4)
         {
         $ReportDetails.DataDisk5Name = $vm.StorageProfile.DataDisks[$disk.Lun].Name 
        $ReportDetails.DataDisk5Size =  $vm.StorageProfile.DataDisks[$disk.Lun].DiskSizeGB 
        $ReportDetails.DataDisk5Caching =  $vm.StorageProfile.DataDisks[$disk.Lun].Caching 
+       $ReportDetails.DataDisk4sku = (Get-azdisk -ResourceGroupName $vm.ResourceGroupName -DiskName $vm.StorageProfile.DataDisks[$disk.Lun].Name).Sku.Name
         }
        }
         }
         $report+=$ReportDetails 
     } }
      
-$report | ft VmName, Hostname , ResourceGroupName, Region, VmSize,VmCore, VmRAM , VirtualNetwork, Subnet, PrivateIpAddress, OsType, OSversion , PublicIPAddress, NicName, ApplicationSecurityGroup, OSDiskName,OSDisksku, OSDiskSize, DataDiskCount, DataDisk1Name, DataDisk1Size  
+$report | ft VmName, Hostname , ResourceGroupName, Region, VmSize,VmCore, VmRAM , VirtualNetwork, Subnet, PrivateIpAddress, OsType, OSversion , PublicIPAddress, NicName, ApplicationSecurityGroup, OSDiskName,OSDisksku, OSDiskSize, DataDiskCount, DataDisk1Name, DataDisk1Size , DataDisk1sku 
 #Change the path based on your convenience
-$report | Export-CSV "c:\pwsh\outputs$reportName"
+$report | Export-CSV "c:\pwsh\outputs\$reportName"
 #$report | Export-Excel -path "c:\outputs\$reportName"
 $report | Export-Excel -path "c:\pwsh\outputs\test01.xlsx"
